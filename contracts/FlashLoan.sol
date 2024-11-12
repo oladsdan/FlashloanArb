@@ -24,13 +24,67 @@ contract FlashLoan {
     // ISwapRouter private immutable _swapRouter;
     // TransferHelper private immutable _transferHelper;
     // SafeERC20 private _safeERC20;
+
+
+    //we decalare a struct for the flashloan
+    struct FlashCallbackData {
+        uint amount0;
+        uint amount1;
+        address caller;
+        address[2] path; // [WBNB, BUSD]// the tokens we want to swap
+        uint8[3] exchRoute; // [0, 1, 0]=[token0, token1, token0]
+        uint24 fee;
+
+    }
     
     //we pass in the token to call the pool in the constructor
     constructor(address _token0, address _token1, uint24 _fee) {
         token0 = IERC20(_token0);
         token1 = IERC20(_token1);
         pool = IUniswapV3Pool(getPool(_token0, _token1, _fee));
-        console.log(address(pool));
+        // console.log(address(pool));
+
+    }
+
+
+    //then we perform a flashloan request
+    function flashLoanRequest(address[2] memory _path, uint256 _amount0, uint256 _amount1, uint24 _fee, uint8[3] memory _exchRoute) external {
+        //so we encode the data
+        bytes memory data = abi.encode(FlashCallbackData(
+            {
+                amount0:_amount0,
+                amount1: _amount1,
+                caller: msg.sender,
+                path: _path,
+                exchRoute: _exchRoute,
+                fee: _fee
+            }
+        ));
+        console.log("");
+        console.log("FlashLoan Pool address \t:", address(pool));
+        //now we can call the flash from the pool
+        IUniswapV3Pool(pool).flash(address(this), _amount0, _amount1, data);
+    }
+
+    //this looks for a callback that is the pancakev3FlashCallback
+
+    function pancakeV3FlashCallback(uint fee0, uint fee1, bytes calldata data) external{
+        //because its the poolContract that is calling the pancakaV3FlashCallback
+        //so the msg.sender should be the address of the pool
+        require(msg.sender == address(pool), "not authorized");
+
+        //then we decode the data passed in bytes
+        FlashCallbackData memory decoded = abi.decode(data, (FlashCallbackData));
+
+
+        //Initialize token
+        IERC20 baseToken = (fee0 > 0) ? token0 : token1; //token we want to borrow
+        uint256 acquiredAmount = (fee0 > 0) ? decoded.amount0 : decoded.amount1;
+        //lets check
+        console.log("fee0 \t:", fee0);
+        console.log("fee1 \t:", fee1);
+        console.log("acquiredAmount \t:", acquiredAmount);
+        console.log("baseToken \t:", address(baseToken));
 
     }
 
