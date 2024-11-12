@@ -11,11 +11,12 @@ const accounts = process.env.PRIVATE_KEY;
 
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.19",
+  solidity: { compilers: [{ version: "0.8.10" }, { version: "0.8.13" }]},
   networks: {
     hardhat: {
       forking: {
-        url: mainnet_provider_url!, 
+        url: "https://binance.llamarpc.com",
+        // url: mainnet_provider_url!,
       }
       
     },
@@ -25,7 +26,7 @@ const config: HardhatUserConfig = {
       accounts: [accounts!]
     },
     testnet: {
-      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      url: testnet_provider_url,
       accounts: [accounts!],
       chainId: 97
     }

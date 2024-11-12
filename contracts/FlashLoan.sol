@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.19; 
+pragma solidity ^0.8.10; 
 
 
 import "hardhat/console.sol";
@@ -30,6 +30,7 @@ contract FlashLoan {
         token0 = IERC20(_token0);
         token1 = IERC20(_token1);
         pool = IUniswapV3Pool(getPool(_token0, _token1, _fee));
+        console.log(address(pool));
 
     }
 
