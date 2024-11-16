@@ -13,17 +13,55 @@ const CAKE = "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82";
 
 const v3Fee = 500;
 
-describe ("DeployGetPool", function() {
-    it("Deployes and gets pool address", async function() {
-        
-        //Deploys
-        const FlashLoan = await ethers.getContractFactory("FlashLoan");
-        console.log("this is done")
-        let flashLoan = await FlashLoan.deploy(WBNB, BUSD, 500);
-        await flashLoan.deployed();
-        console.log("flashLoan contract Deployed \t:", flashLoan.address)
+describe("BinanceFlashLoanPancakeSwap", function(){
+    describe("Depoloyment and Testing", function(){
+        it ("Deployes and Perform flash loan arbitrage", async function() {
+            //Deploys
+            const FlashLoan = await ethers.getContractFactory("FlashLoan");
+            let flashLoan = await FlashLoan.deploy(WBNB, BUSD, 500);
+            await flashLoan.deployed();
+
+
+            //intialized  flash loan params
+            const amountBorrow = ethers.utils.parseUnits("30", 18);
+            const tokenPath =[CAKE, WBNB];
+            const routing = [1, 0, 1];
+            const feeV3 =500;
+
+
+            //create a signer 
+            const [signer] = await ethers.getSigners();
+
+            //then we conencet to the contract
+            const contractFlashloan = new ethers.Contract(
+                flashLoan.address,
+                abiFlashLoan,
+                signer
+
+            )
+
+            //call flashloan Request Function
+            const txFlashloan = await contractFlashloan.flashLoanRequest(tokenPath, 0, amountBorrow, feeV3, routing);
+
+            //show Results
+            const txFlashLoanReceipt = await txFlashloan.wait();
+            expect(txFlashLoanReceipt.status).to.eql(1);
+
+        })
     })
 })
+
+// describe ("DeployGetPool", function() {
+//     it("Deployes and gets pool address", async function() {
+        
+//         //Deploys
+//         const FlashLoan = await ethers.getContractFactory("FlashLoan");
+//         console.log("this is done")
+//         let flashLoan = await FlashLoan.deploy(WBNB, BUSD, 500);
+//         await flashLoan.deployed();
+//         console.log("flashLoan contract Deployed \t:", flashLoan.address)
+//     })
+// })
 
 // describe("abasicTest", function () {
 //     it("getsAblockNumber", async function () {

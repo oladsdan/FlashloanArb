@@ -1,4 +1,12 @@
+
+
+
 // SPDX-License-Identifier: UNLICENSED
+//FlashLoan contract that creates swaps between pancakeswapv3 and pancakeSwap v2
+/**
+ * 1. we get the address of the pool contract by declaring the address of the token and 
+ *      placing it in a constructor that calls a getPool functions
+ */
 
 pragma solidity ^0.8.10; 
 
@@ -14,6 +22,14 @@ import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 
 contract FlashLoan {
+    using SafeERC20 for IERC20;
+    using SafeMath for uint256;
+
+    IUniswapV2Router02 constant pancakeswapV2 = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
+
+    ISwapRouter constant pancakeswapV3 = ISwapRouter(0x1b81D678ffb9C0263b24A97847620C99d213eB14);
+
+     
 
     IERC20 private immutable token0;
     IERC20 private immutable token1;
@@ -85,6 +101,51 @@ contract FlashLoan {
         console.log("fee1 \t:", fee1);
         console.log("acquiredAmount \t:", acquiredAmount);
         console.log("baseToken \t:", address(baseToken));
+
+    }
+
+
+    function _place_swap(uint256 _amountIn, address[2] memory _tokenPath, uint8 _routing, uint24 _v3_fee) private returns (uint256){
+
+        //initialize
+
+        uint deadline = block.timestamp + 30;
+        uint256 swap_amount_out = 0;
+
+        address[] memory path = new address[](2);
+        path[0] = _tokenPath[0];
+        path[1] = _tokenPath[1];
+
+        // Handle for pancakewap v2
+        if (_routing == 0){
+            TransferHelper.safeApprove(_tokenPath[0], address(pancakeswapV2), _amountIn);
+            swap_amount_out = pancakeswapV2.swapExactTokensForTokens({
+                amountIn: _amountIn,
+                amountOutMin: 0,
+                path: path,
+                to: address(this),
+                deadline: deadline
+            })[1]; //outmout out is the second number in the array
+        } else if (_routing == 1) {
+            TransferHelper.safeApprove(_tokenPath[0], address(pancakeswapV3), _amountIn);
+            uint256 amountOutMinimum  = 0;
+            uint160 sqrtPriceLimitX96 = 0;
+            //we perform the swap
+            ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+                tokenIn: _tokenPath[0],
+                tokenOut: _tokenPath[1],
+                fee: _v3_fee,
+                recipient: address(this),
+                deadline: deadline,
+                amountIn: _amountIn,
+                amountOutMinimum: amountOutMinimum,
+                sqrtPriceLimitX96: sqrtPriceLimitX96
+            });
+            swap_amount_out = pancakeswapV3.exactInputSingle(params);
+
+        }
+        return swap_amount_out;
+
 
     }
 
