@@ -102,6 +102,30 @@ contract FlashLoan {
         console.log("acquiredAmount \t:", acquiredAmount);
         console.log("baseToken \t:", address(baseToken));
 
+        //trade 1
+        acquiredAmount = _place_swap(acquiredAmount, [address(baseToken), decoded.path[0]] , decoded.exchRoute[0], decoded.fee);
+
+        console.log( "Base1 token: ", decoded.path[0]);
+        console.log("Swap1 Amount: ", acquiredAmount);
+
+        //trade 2
+        acquiredAmount = _place_swap(acquiredAmount, [decoded.path[0], decoded.path[1]], decoded.exchRoute[1], decoded.fee);
+
+        console.log( "Base2 token: ", decoded.path[1]);
+        console.log("Swap2 Amount: ", acquiredAmount);
+
+
+        //trade 3
+        acquiredAmount = _place_swap(acquiredAmount, [decoded.path[1], address(baseToken)], decoded.exchRoute[2], decoded.fee);
+
+        console.log( "Base3 token: ", address(baseToken));
+        console.log("Swap3 Amount: ", acquiredAmount);
+
+
+        //Repay the Flashloan
+
+
+
     }
 
 
