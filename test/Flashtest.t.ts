@@ -75,6 +75,10 @@ describe("BinanceFlashLoanPancakeSwap", function(){
             const receiptTxBusd = await txTferBusd.wait(1);
             expect(receiptTxBusd.status).to.eql(1);
 
+            const contractBalBusd = await contractBusd.balanceOf(flashLoan.address);
+
+            console.log("wallet BUsd" , contractBalBusd)
+
 
             //intialized  flash loan params
             const amountBorrow = ethers.utils.parseUnits("30", 18);
