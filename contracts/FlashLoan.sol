@@ -102,7 +102,7 @@ contract FlashLoan {
         console.log("acquiredAmount \t:", acquiredAmount);
         console.log("baseToken \t:", address(baseToken));
 
-        //trade 1
+         //trade 1
         acquiredAmount = _place_swap(acquiredAmount, [address(baseToken), decoded.path[0]] , decoded.exchRoute[0], decoded.fee);
 
         console.log( "Base1 token: ", decoded.path[0]);
@@ -123,6 +123,28 @@ contract FlashLoan {
 
 
         //Repay the Flashloan
+
+        if (fee0 > 0){
+            TransferHelper.safeApprove(address(token0), address(this), token0.balanceOf(address(this)));
+
+            token0.safeTransfer(address(pool), decoded.amount0 + fee0 );
+            console.log("token0: ", address(token0));
+            console.log("token0 Balancee", token0.balanceOf(address(this)));
+
+            //now we pay ourselves, dont pay the msg.sender that call the function  we pay the caller
+            token0.safeTransfer(decoded.caller, token0.balanceOf(address(this)));
+
+        } else {
+            TransferHelper.safeApprove(address(token1), address(this), token1.balanceOf(address(this)));
+
+            token1.safeTransfer(address(pool), decoded.amount1 + fee1 );
+            console.log("token1: ", address(token1));
+            console.log("token1 Balancee", token1.balanceOf(address(this)));
+
+            //now we pay ourselves, dont pay the msg.sender that call the function  we pay the caller
+            token0.safeTransfer(decoded.caller, token1.balanceOf(address(this)));
+
+        }
 
 
 
